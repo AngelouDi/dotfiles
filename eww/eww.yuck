@@ -3,8 +3,25 @@
 (defvar mem_hover false)
 (defvar temp_hover false)
 (defvar cpu_hover false)
+(defvar time_hover false)
+(defvar brightness_hover false)
+(defvar volume_hover false)
+
 (defpoll time :interval "1s"
-    `date +%H:%M:%S`)
+    `date '+{"date":"%d/%m/%y","time":"%H:%M:%S"}'`
+)
+
+(defpoll cur_brighness :interval "0.1s"
+    :initial `light -G`
+    :run-while brightness_hover 
+    `light -G`
+)
+
+(defpoll cur_volume :interval "0.1s"
+    :initial `pamixer --get-volume`
+    :run-while  volume_hover
+    `pamixer --get-volume`
+)
 
 (deflisten song 
     :initial '{"title":"Title","album":"Album","artist":"Artist",status:"Paused",volume:10,"cover":"CoverUrl","length:100000000","flength":"0:00"}'
@@ -161,8 +178,19 @@
 
 (defwidget right []
     (box 
-        :class "bar-panel"
         :orientation "h" 
+        :halign "end"
+        :space-evenly false  
+        :spacing 10
+        (right_sliders)
+        (cpu_mem)
+        (time_w)
+    )
+)
+
+(defwidget cpu_mem []
+    (box
+        :class "bar-panel"
         :space-evenly false  
         :halign "end"
         :spacing 8
@@ -211,7 +239,6 @@
     (eventbox
         :onhover "eww update mem_hover=true"
         :onhoverlost "eww update mem_hover=false"
-        (box
         (box :class "mem_module" :vexpand "false" :hexpand "false" 
             :space-evenly false
             (revealer
@@ -232,6 +259,76 @@
                 )
             )
         )
+    )
+)
+
+(defwidget right_sliders []
+    (box
+        :class "bar-panel"
+        :space-evenly false  
+        :halign "end"
+        :spacing 8
+        (volume)
+        (brightness)
+    )
+)
+
+(defwidget brightness []
+    (eventbox
+        :onhover "eww update brightness_hover=true"
+        :onhoverlost "eww update brightness_hover=false"
+        (box
+        :class "brightness"
+            :space-evenly false
+            (label :class "sun" :text "☀")
+            (revealer
+                :transition "slideright"
+                :reveal brightness_hover
+                (scale 
+                    :min 0
+                    :max 100
+                    :value {cur_brighness}
+                    :active "true"
+                    :onchange "light -S {}" 
+                )
+            )
+        )
+    )
+)
+
+(defwidget volume []
+    (eventbox
+        :onhover "eww update volume_hover=true"
+        :onhoverlost "eww update volume_hover=false"
+        (box
+        :class "volume"
+            :space-evenly false
+            :spacing 10
+            (label :class "audio" :text {cur_volume > 0? "🔊": "🔇"})
+            (revealer
+                :transition "slideright"
+                :reveal volume_hover
+                (scale 
+                    :min 0
+                    :max 100
+                    :value {cur_volume}
+                    :active "true"
+                    :onchange "pamixer --set-volume {}" 
+                )
+            )
+        )
+    )
+)
+
+(defwidget time_w []
+    (eventbox
+        :onhover "eww update time_hover=true"
+        :onhoverlost "eww update time_hover=false"
+        :onclick "eww open cal_window"
+        (box
+            :class "bar-panel"
+            (label :class "time" :visible {!time_hover} :text {' ' + time.time})
+            (label :class "time" :visible {time_hover} :text {' ' + time.date })
         )
     )
 )
@@ -316,3 +413,22 @@
 
     (popup)
 )
+
+(defwidget cal_w []
+    (eventbox
+        :onhoverlost "eww close cal_window"
+        (calendar)
+    )
+)
+
+(defwindow cal_window
+    :geometry (geometry :x "0%"
+                :y "1%"
+                :anchor "top right")
+    :stacking "fg"
+    :windowtype "dock"
+    :monitor 0
+
+    (cal_w)
+)
+
