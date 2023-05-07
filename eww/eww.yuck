@@ -85,6 +85,7 @@
 
 (defwidget left []
     (box 
+        :class "bar-panel"
         :orientation "h" 
         :space-evenly false  
         :spacing 15
@@ -160,6 +161,7 @@
 
 (defwidget right []
     (box 
+        :class "bar-panel"
         :orientation "h" 
         :space-evenly false  
         :halign "end"
