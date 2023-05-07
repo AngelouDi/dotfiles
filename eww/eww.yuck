@@ -1,6 +1,8 @@
 (defpoll interfaceId :interval "60s" "route | grep default | head -n1 | awk '{print $8}'")
 (defvar music_hover false)
 (defvar mem_hover false)
+(defvar temp_hover false)
+(defvar cpu_hover false)
 (defpoll time :interval "1s"
     `date +%H:%M:%S`)
 
@@ -85,8 +87,35 @@
     (box 
         :orientation "h" 
         :space-evenly false  
+        :spacing 15
         :halign "start"
         (net)
+        (temp)
+        (cpu)
+    )
+)
+
+(defwidget temp []
+    (eventbox
+        :onhover "eww update temp_hover=true"
+        :onhoverlost "eww update temp_hover=false"
+        (box
+            :space-evenly false
+            :spacing 2 
+            (label :class "temp-icn" :text "🌡")
+            (revealer
+                :transition "slideright"
+                :reveal temp_hover
+                :duration "250ms"
+                (box
+                    :space-evenly false
+                    (label :class "temp-mb" :text {'MB: '+ EWW_TEMPS["ACPITZ_TEMP1"] + "°C" })
+                    (label :class "separator" :text "|")
+                )
+            )
+            (label :class "temp-cpu" :text {'CPU: ' +EWW_TEMPS["AMDGPU_EDGE"]  + "°C"})
+
+        )
     )
 )
 
@@ -96,6 +125,36 @@
         :space-evenly false  
         :halign "center"
         (player)
+    )
+)
+
+(defwidget cpu []
+    (eventbox
+        :onhover "eww update cpu_hover=true"
+        :onhoverlost "eww update cpu_hover=false"
+        (box
+            :space-evenly false
+            :spacing 2 
+            (label :class "cpu-icn" :text "")
+            (revealer
+                :transition "slideright"
+                :reveal cpu_hover
+                :duration "250ms"
+                (box
+                    :space-evenly false
+                    (label :class "temp-mb" :text {EWW_CPU["cores"][0].usage 
+                    + " " + EWW_CPU["cores"][1].usage
+                    + " " + EWW_CPU["cores"][2].usage
+                    + " " + EWW_CPU["cores"][3].usage
+                    + " " + EWW_CPU["cores"][4].usage
+                    + " " + EWW_CPU["cores"][5].usage}
+                    )
+                    (label :class "separator" :text "|")
+                )
+            )
+            (label :class "temp-cpu" :text {round(EWW_CPU.avg,2) + "%"})
+
+        )
     )
 )
 
@@ -116,13 +175,13 @@
         :spacing 10
         (box
             :space-evenly false
-            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_DOWN*4/1024/1024,2)}")
             (label :class "down-arrow" :text "⬇")
+            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_DOWN*4/1024/1024,2)}")
         )
         (box
             :space-evenly false
-            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_UP*4/1024/1024,2)}")
             (label :class "up-arrow" :text "⬆")
+            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_UP*4/1024/1024,2)}")
         )
     )
 )

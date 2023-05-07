@@ -97,6 +97,14 @@
     color: rgba(142, 216, 128, 0.9);
 }
 
-.net-stat {
+.net-stat, .temp-mb, .temp-cpu, .separator {
     color: rgb(182, 182, 182);
+}
+
+.temp-icn {
+    color: rgb(212, 150, 114);
+}
+
+.cpu-icn {
+    color: rgb(124, 115, 177);
 }
