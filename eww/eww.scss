@@ -1,0 +1,102 @@
+*{
+    all: unset;
+    text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.6);
+    font-family: 'JetBrainsMono Nerd Font';
+}
+
+
+.song-name {
+    font-weight: bold;
+}
+
+.popup scale {
+    min-height: 8px;
+    min-width: 100px;
+}
+
+
+.popup scale trough{
+    border-radius: 10px;
+    min-height: 8px;
+    background-color: rgba(0,0,0,0.2);
+}
+
+.popup scale highlight{
+    box-shadow: 0px 0px 5px 0px rgba(133, 219, 192, 0.7);
+}
+
+.popup scale highlight{
+    border-radius: 10px;
+    background-color:#7FDD9C;
+}
+
+.popup {
+    background-color: rgb(50, 60, 70, 0.7);
+    background-repeat: repeat-x;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: large;
+}
+
+.song_title{
+    font-weight: bold;
+}
+
+.song_artist{
+    color: rgb(182, 182, 182);
+}
+
+.play-btn{
+    padding-right: 10px;
+}
+
+.timestamp{
+    padding: 0px 10px 0px 20px;
+}
+
+.music_cover {
+    background-size: cover;
+	background-position: center;
+    min-width: 120px;
+    border-radius: 8px;
+}
+
+.bat_module label, .mem_module label{
+    font-size: 12;
+    font-weight: 900;
+    margin: 7px 7px 6px 7px;
+}
+
+
+.mem_module { 
+    color: rgb(240, 219, 101);
+}
+
+.bat-good {
+    color: #afbea2;
+}
+
+.bat-chrg {
+    color: rgb(124, 221, 104);
+}
+
+.bat-low {
+    color: rgb(240, 68, 68);
+}
+
+.down-arrow, .up-arrow {
+    font-size: 24;
+}
+
+.up-arrow {
+    color: rgba(197, 79, 79, 0.9);
+}
+
+.down-arrow {
+    color: rgba(142, 216, 128, 0.9);
+}
+
+.net-stat {
+    color: rgb(182, 182, 182);
+}

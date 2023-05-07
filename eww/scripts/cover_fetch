@@ -1,0 +1,26 @@
+#!/bin/bash
+
+
+image_url=$(playerctl metadata -f {{mpris:artUrl}})
+#get everything after last '/'
+image_name=${image_url##*/}
+
+
+if [ ! -d "/tmp/bar" ]; then
+    mkdir /tmp/bar
+fi 
+
+if [ -f "/tmp/bar/$image_name" ]; then
+    echo "/tmp/bar/$image_name"
+    exit 0
+fi
+
+curl -o /tmp/bar/$image_name $image_url -s
+
+if [ $? -ne 0 ]; then
+    cp ~/.config/eww/assets/cover.png /tmp/bar/$image_name
+fi
+
+echo "/tmp/bar/$image_name"
+exit 0
+

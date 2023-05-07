@@ -1,0 +1,257 @@
+(defpoll interfaceId :interval "60s" "route | grep default | head -n1 | awk '{print $8}'")
+(defvar music_hover false)
+(defvar mem_hover false)
+(defpoll time :interval "1s"
+    `date +%H:%M:%S`)
+
+(deflisten song 
+    :initial '{"title":"Title","album":"Album","artist":"Artist",status:"Paused",volume:10,"cover":"CoverUrl","length:100000000","flength":"0:00"}'
+    `playerctl --follow metadata --format '\{"title":"{{title}}","album":"{{album}}","artist":"{{artist}}","status":"{{status}}","volume":{{volume}},"cover":"{{mpris:artUrl}}","length":{{mpris:length}},"flength":"{{duration(mpris:length)}}"\}'`
+)
+
+
+(deflisten song_status
+    :initial ""
+    'playerctl --follow status'
+)
+
+(defpoll song_cover
+    :interval "4s"
+    :initial ""
+    :run-while {song_status != ""}
+    `scripts/cover_fetch`
+)
+
+(defpoll song_pos
+    :initial 0
+    :interval "1s"
+    :run-while {song_status != ""}
+    `playerctl position`)
+    
+(defpoll fsong_pos
+    :initial 0
+    :interval "1s"
+    :run-while {song.status != ""}
+    `playerctl position --format '{{duration(position)}}'`)
+
+(defwidget bar_w []
+    (box
+        :orientation "h"
+    (left)
+    (center)
+    (right)
+    )
+)
+
+(defwidget player []
+    (box
+        :orientation "h"
+        :halign "center"
+        :valign "center"
+        :class "player"
+        :spacing 10
+        :space-evenly "false"
+        :visible {song_status != ""}
+        (eventbox
+            :onhover "eww update music_hover=true"
+            :onhoverlost "eww update music_hover=false"
+            :onclick "playerctl play-pause"
+            :onrightclick "eww open music_player"
+            (box
+            :space-evenly "false"
+                (label
+                    :class "play-btn"
+                    :text {song.status == "Playing" ? "⏸ " :"▶️" }
+                )
+                (label 
+                    :class "song-name"
+                    :text "${song.title} "
+                )
+                (revealer
+                    :transition "slideleft"
+                    :reveal music_hover
+                    :duration "500ms"
+                    (label 
+                        :class "song-name"
+                        :text " ~ ${song.artist}"
+                    )
+                )
+            )
+        )
+    )
+)
+
+(defwidget left []
+    (box 
+        :orientation "h" 
+        :space-evenly false  
+        :halign "start"
+        (net)
+    )
+)
+
+(defwidget center []
+    (box 
+        :orientation "h" 
+        :space-evenly false  
+        :halign "center"
+        (player)
+    )
+)
+
+(defwidget right []
+    (box 
+        :orientation "h" 
+        :space-evenly false  
+        :halign "end"
+        :spacing 8
+        (bat)
+        (mem)
+    )
+)
+
+(defwidget net []
+    (box
+        :space-evenly false
+        :spacing 10
+        (box
+            :space-evenly false
+            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_DOWN*4/1024/1024,2)}")
+            (label :class "down-arrow" :text "⬇")
+        )
+        (box
+            :space-evenly false
+            (label :class "net-stat" :text "${round(EWW_NET[interfaceId].NET_UP*4/1024/1024,2)}")
+            (label :class "up-arrow" :text "⬆")
+        )
+    )
+)
+
+
+(defwidget bat []
+    (box :class "bat_module" :vexpand "false" :hexpand "false" 
+        (circular-progress :value {EWW_BATTERY.BATT.capacity}
+            :class { EWW_BATTERY.BATT.status == "Charging" ? "bat-chrg" :
+                    EWW_BATTERY.BATT.capacity > 10 ? "bat-good" : "bat-low" }
+            :start-at 1
+            :thickness 3
+            (label 
+                :limit-width 2
+                :text { EWW_BATTERY.BATT.status == "Charging" ? "🔌" :
+                        EWW_BATTERY.BATT.capacity }
+                :class { EWW_BATTERY.BATT.status == "Charging" ? "bat-chrg" :
+                        EWW_BATTERY.BATT.capacity > 10 ? "bat-good" : "bat-low" }
+            )
+        )
+    )
+)
+
+(defwidget mem []
+    (eventbox
+        :onhover "eww update mem_hover=true"
+        :onhoverlost "eww update mem_hover=false"
+        (box
+        (box :class "mem_module" :vexpand "false" :hexpand "false" 
+            :space-evenly false
+            (revealer
+                :transition "slideleft"
+                :reveal mem_hover
+                :duration "250ms"
+                (label 
+                    :text {round(EWW_RAM.used_mem/(1000000000),2) + "/" + round(EWW_RAM.total_mem/(1000000000),2) + " " + "GB"} 
+                )
+            )
+            (circular-progress :value {EWW_RAM.used_mem / EWW_RAM.total_mem * 100}
+                :class "mem_module" 
+                :start-at 1
+                :thickness 3
+                (label 
+                    :class "mem_module" 
+                    :text {round(EWW_RAM.used_mem / EWW_RAM.total_mem * 100, 0)} 
+                )
+            )
+        )
+        )
+    )
+)
+
+(defwindow bar
+    :geometry (geometry :x "0%"
+                :y "0%"
+                :width "98%"
+                :height "30px"
+                :anchor "top center")
+    :stacking "fg"
+    :windowtype "dock"
+    :exclusive true
+    :monitor 0
+
+    (bar_w)
+)
+
+(defwidget popup []
+    (eventbox
+    :onhoverlost "eww close music_player"
+        (box
+            :class "popup"
+            :orientation "h"
+            :space-evenly false
+            :hexpand false
+            :vexpand false
+            :spacing 20
+            (box 
+                :hexpand false
+                :vexpand false
+                :class "music_cover" 
+                :style 'background-image: url("${song_cover}")')
+            (box 
+                :orientation "v" 
+                :space-evenly false
+                :hexpand true
+                (label :class "song_title" :limit-width 25 :wrap true :text "${song.title}")
+                (label :class "song_artist" :limit-width 25 :wrap true :text "${song.artist}")
+                (label :class "song_album" :limit-width 25 :wrap true :text "${song.album}")
+                    (box
+                        :orientation "h"
+                        :halign "center"
+                        :space-evenly false
+                        :style "padding: 10px;"
+                        (button 
+                            :onclick "playerctl previous"
+                            "⏮"
+                        )
+                        (label :class "timestamp" :text "${fsong_pos}/${song.flength}")
+                        (button 
+                            :onclick "playerctl play-pause"
+                            :class "play-btn"
+                            {song.status == "Playing" ? "⏸ " :"▶️" }
+                        )
+                        (button 
+                            :onclick "playerctl next"
+                            "⏭️"
+                        )
+                    )
+                    (scale
+                        :min 0
+                        :max 100
+                        :value {(song_pos * 100000000) / song.length}
+                        :active "true"
+                        :onchange "playerctl position $(( ({} * ${song.length} )/100000000 ))"
+                    )
+            )
+        )
+    )
+)
+
+(defwindow music_player
+    :geometry (geometry :x "0%"
+                :y "0%"
+                :width "480px"
+                :height "104px"
+                :anchor "top center")
+    :stacking "fg"
+    :windowtype "dock"
+    :monitor 0
+
+    (popup)
+)
