@@ -1,0 +1,7 @@
+require("mitsos.remap")
+require("mitsos.lazy")
+require("mitsos.set")
+require("mitsos.harpoon")
+require("mitsos.minicomment")
+require("mitsos.nvim_treesitter_context")
+require("mitsos.codium")
