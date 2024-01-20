@@ -80,6 +80,7 @@
                 )
                 (label 
                     :class "song-name"
+                    :limit-width 40 
                     :text "${song.title} "
                 )
                 (revealer

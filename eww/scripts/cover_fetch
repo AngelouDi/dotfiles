@@ -11,14 +11,16 @@ if [ ! -d "/tmp/bar" ]; then
 fi 
 
 if [ -f "/tmp/bar/$image_name" ]; then
-    echo "/tmp/bar/$image_name"
+    echo "/tmp/bar/$image_name" 
     exit 0
 fi
 
-curl -o /tmp/bar/$image_name $image_url -s
+curl -o /tmp/bar/$image_name $image_url -s > /dev/null 2>&1
+
 
 if [ $? -ne 0 ]; then
-    cp ~/.config/eww/assets/cover.png /tmp/bar/$image_name
+    echo ~/.config/eww/assets/cover.png 
+    exit 0
 fi
 
 echo "/tmp/bar/$image_name"
